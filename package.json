@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "npm run lint && npm run build",
-    "test:ci": "npm ci && npm run lint && npm run build"
+    "test:ci": "npm ci && npm run lint && npm run build",
+    "start": "vite preview --host 0.0.0.0 --port $PORT"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
