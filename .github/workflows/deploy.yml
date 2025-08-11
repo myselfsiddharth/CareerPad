@@ -101,11 +101,15 @@ jobs:
         echo "File size: $(wc -c < service-account.json) bytes"
         
         echo "Setting up Firebase project..."
-        firebase use ${{ env.FIREBASE_PROJECT_ID }} --token "${{ secrets.FIREBASE_TOKEN }}"
+        
+        # Use service account authentication for all Firebase commands
+        export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
+        
+        firebase use ${{ env.FIREBASE_PROJECT_ID }}
         echo "Current project: $(firebase use)"
         
         echo "Checking Firebase project configuration..."
-        firebase projects:list --token "${{ secrets.FIREBASE_TOKEN }}"
+        firebase projects:list
         echo "Checking current Firebase configuration..."
         firebase --version
         
@@ -117,9 +121,6 @@ jobs:
         # Force Firebase to use Hosting configuration ONLY
         echo "Deploying ONLY to Firebase Hosting..."
         echo "Ensuring no Cloud Run deployment..."
-        
-        # Use service account authentication instead of deprecated token
-        export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
         
         firebase deploy --only hosting --non-interactive
         
