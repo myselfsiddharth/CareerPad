@@ -93,17 +93,27 @@ jobs:
       
     - name: Deploy to Firebase Hosting
       run: |
+        echo "Setting up Firebase authentication..."
+        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > service-account.json
+        export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
+        
         echo "Setting up Firebase project..."
-        firebase projects:list
         firebase use ${{ env.FIREBASE_PROJECT_ID }}
         echo "Current project: $(firebase use --print)"
+        
+        echo "Deploying to Firebase Hosting..."
         firebase deploy --only hosting --non-interactive
         
     - name: Deploy Firebase Functions
       run: |
+        echo "Setting up Firebase authentication for Functions..."
+        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > service-account.json
+        export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
+        
         cd functions
         npm ci
-        export GOOGLE_APPLICATION_CREDENTIALS=../service-account.json
+        
+        echo "Deploying Firebase Functions..."
         firebase deploy --only functions --project ${{ env.FIREBASE_PROJECT_ID }}
         
     - name: Deployment Summary
