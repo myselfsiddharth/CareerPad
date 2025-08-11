@@ -14,40 +14,40 @@ jobs:
   test:
     name: Test and Build
     runs-on: ubuntu-latest
-    
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run linting
-      run: npm run lint
-      
-    - name: Build application
-      run: npm run build
-      
-    - name: Test build output
-      run: |
-        if [ ! -d "dist" ]; then
-          echo "❌ Build failed: dist directory not found"
-          exit 1
-        fi
-        echo "✅ Build successful! Size: $(du -sh dist | cut -f1)"
-        
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-files
-        path: dist/
-        retention-days: 1
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build application
+        run: npm run build
+
+      - name: Test build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build failed: dist directory not found"
+            exit 1
+          fi
+          echo "✅ Build successful! Size: $(du -sh dist | cut -f1)"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-files
+          path: dist/
+          retention-days: 1
 
   deploy:
     name: Deploy to Firebase
@@ -55,106 +55,42 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
     environment: production
-    
+
+    env:
+      FIREBASE_PROJECT_ID: ${{ env.FIREBASE_PROJECT_ID }}
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Install Firebase CLI
-      run: npm install -g firebase-tools
-      
-    - name: Debug Secrets
-      run: |
-        echo "Checking secrets availability..."
-        if [ -n "${{ secrets.FIREBASE_TOKEN }}" ]; then
-          echo "✅ FIREBASE_TOKEN is set (length: ${#FIREBASE_TOKEN})"
-          echo "First 10 chars: ${FIREBASE_TOKEN:0:10}..."
-        else
-          echo "❌ FIREBASE_TOKEN is empty or not set"
-        fi
-        
-        if [ -n "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" ]; then
-          echo "✅ FIREBASE_SERVICE_ACCOUNT is set"
-        else
-          echo "❌ FIREBASE_SERVICE_ACCOUNT is empty or not set"
-        fi
-        
-    - name: Build application
-      run: npm run build
-      
-    - name: Deploy to Firebase Hosting
-      run: |
-        echo "Setting up Firebase authentication..."
-        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > service-account.json
-        
-        echo "Verifying service account file..."
-        ls -la service-account.json
-        echo "File size: $(wc -c < service-account.json) bytes"
-        
-        echo "Setting up Firebase project..."
-        
-        # Use Firebase CLI with service account file directly
-        echo "Testing Firebase authentication..."
-        firebase --version
-        
-        # Try to use the project without authentication first
-        echo "Setting project..."
-        firebase use ${{ env.FIREBASE_PROJECT_ID }} --token "${{ secrets.FIREBASE_TOKEN }}"
-        echo "Current project: $(firebase use)"
-        
-        echo "Deploying to Firebase Hosting..."
-        echo "Current directory: $(pwd)"
-        echo "Contents: $(ls -la)"
-        echo "Dist folder: $(ls -la dist/)"
-        
-        # Force Firebase to use Hosting configuration ONLY
-        echo "Deploying ONLY to Firebase Hosting..."
-        echo "Ensuring no Cloud Run deployment..."
-        
-        firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
-        
-    - name: Deploy Firebase Functions
-      run: |
-        echo "Setting up Firebase authentication for Functions..."
-        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > service-account.json
-        
-        echo "Verifying service account file..."
-        ls -la service-account.json
-        echo "File size: $(wc -c < service-account.json) bytes"
-        
-        cd functions
-        npm ci
-        
-        echo "Deploying Firebase Functions..."
-        firebase deploy --only functions --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
-        
-    - name: Deployment Summary
-      run: |
-        echo "🚀 Deployment completed successfully!"
-        echo "📱 Frontend: https://${{ env.FIREBASE_PROJECT_ID }}.web.app"
-        echo "🔧 Functions: Deployed to ${{ env.FIREBASE_PROJECT_ID }}"
-        echo "⏰ Deployed at: $(date)"
-        
-    - name: Notify on Success
-      if: success()
-      run: |
-        echo "✅ CareerPad successfully deployed to production!"
-        echo "🌐 Visit: https://${{ env.FIREBASE_PROJECT_ID }}.web.app"
-        
-    - name: Notify on Failure
-      if: failure()
-      run: |
-        echo "❌ Deployment failed! Check the logs above for details."
-        echo "🔍 Common issues:"
-        echo "   - Firebase secrets not configured"
-        echo "   - Build errors in the test job"
-        echo "   - Firebase project access issues" 
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-files
+          path: dist/
+
+      - name: Install dependencies in functions folder
+        run: |
+          cd functions
+          npm ci
+
+      - name: Setup Firebase Service Account
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          echo "$FIREBASE_SERVICE_ACCOUNT" > service-account.json
+
+      - name: Set GOOGLE_APPLICATION_CREDENTIALS environment variable
+        run: echo "GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/service-account.json" >> $GITHUB_ENV
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy to Firebase Hosting and Functions
+        run: firebase deploy --only hosting,functions --project ${{ env.FIREBASE_PROJECT_ID }} --non-interactive
