@@ -114,7 +114,11 @@ jobs:
         echo "Contents: $(ls -la)"
         echo "Dist folder: $(ls -la dist/)"
         
-        # Force Firebase to use Hosting configuration
+        # Force Firebase to use Hosting configuration ONLY
+        echo "Deploying ONLY to Firebase Hosting..."
+        echo "Ensuring no Cloud Run deployment..."
+        firebase target:clear hosting
+        firebase target:apply hosting default ${{ env.FIREBASE_PROJECT_ID }}
         firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
         
     - name: Deploy Firebase Functions
