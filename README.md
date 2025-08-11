@@ -1,7 +1,7 @@
 # 🚀 CareerPad
 
-[![CI/CD Status](https://github.com/YOUR_GITHUB_USERNAME/CareerPad/workflows/Status%20Check/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/CareerPad/actions)
-[![Deploy Status](https://github.com/YOUR_GITHUB_USERNAME/CareerPad/workflows/Deploy%20to%20Firebase/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/CareerPad/actions)
+[![CI/CD Status](https://github.com/myselfsiddharth/CareerPad/workflows/Status%20Check/badge.svg)](https://github.com/myselfsiddharth/CareerPad/actions)
+[![Deploy Status](https://github.com/myselfsiddharth/CareerPad/workflows/Deploy%20to%20Firebase/badge.svg)](https://github.com/myselfsiddharth/CareerPad/actions)
 
 > **⚠️ IMPORTANT**: Replace `YOUR_GITHUB_USERNAME` with your actual GitHub username before pushing!
 
