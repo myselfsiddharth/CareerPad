@@ -102,11 +102,12 @@ jobs:
         
         echo "Setting up Firebase project..."
         firebase use ${{ env.FIREBASE_PROJECT_ID }} --token "${{ secrets.FIREBASE_TOKEN }}"
-        echo "Current project: $(firebase use --print)"
+        echo "Current project: $(firebase use)"
         
         echo "Checking Firebase project configuration..."
         firebase projects:list --token "${{ secrets.FIREBASE_TOKEN }}"
-        firebase target:list --token "${{ secrets.FIREBASE_TOKEN }}"
+        echo "Checking current Firebase configuration..."
+        firebase --version
         
         echo "Deploying to Firebase Hosting..."
         echo "Current directory: $(pwd)"
@@ -114,7 +115,7 @@ jobs:
         echo "Dist folder: $(ls -la dist/)"
         
         # Force Firebase to use Hosting configuration
-        firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive --debug
+        firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
         
     - name: Deploy Firebase Functions
       run: |
