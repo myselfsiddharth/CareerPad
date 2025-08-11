@@ -42,7 +42,11 @@ jobs:
         fi
         echo "✅ Build successful! Size: $(du -sh dist | cut -f1)"
         
-    - name: Upload build artiname: Deploy to Firebase
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-files
+          path: dist/
 
 on:
   push:
