@@ -117,9 +117,11 @@ jobs:
         # Force Firebase to use Hosting configuration ONLY
         echo "Deploying ONLY to Firebase Hosting..."
         echo "Ensuring no Cloud Run deployment..."
-        firebase target:clear hosting
-        firebase target:apply hosting default ${{ env.FIREBASE_PROJECT_ID }}
-        firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
+        
+        # Use service account authentication instead of deprecated token
+        export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
+        
+        firebase deploy --only hosting --non-interactive
         
     - name: Deploy Firebase Functions
       run: |
@@ -134,7 +136,8 @@ jobs:
         npm ci
         
         echo "Deploying Firebase Functions..."
-        firebase deploy --only functions --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
+        export GOOGLE_APPLICATION_CREDENTIALS=../service-account.json
+        firebase deploy --only functions --non-interactive
         
     - name: Deployment Summary
       run: |
