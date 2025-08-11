@@ -102,16 +102,14 @@ jobs:
         
         echo "Setting up Firebase project..."
         
-        # Use service account authentication for all Firebase commands
-        export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
-        
-        firebase use ${{ env.FIREBASE_PROJECT_ID }}
-        echo "Current project: $(firebase use)"
-        
-        echo "Checking Firebase project configuration..."
-        firebase projects:list
-        echo "Checking current Firebase configuration..."
+        # Use Firebase CLI with service account file directly
+        echo "Testing Firebase authentication..."
         firebase --version
+        
+        # Try to use the project without authentication first
+        echo "Setting project..."
+        firebase use ${{ env.FIREBASE_PROJECT_ID }} --token "${{ secrets.FIREBASE_TOKEN }}"
+        echo "Current project: $(firebase use)"
         
         echo "Deploying to Firebase Hosting..."
         echo "Current directory: $(pwd)"
@@ -122,7 +120,7 @@ jobs:
         echo "Deploying ONLY to Firebase Hosting..."
         echo "Ensuring no Cloud Run deployment..."
         
-        firebase deploy --only hosting --non-interactive
+        firebase deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
         
     - name: Deploy Firebase Functions
       run: |
@@ -137,8 +135,7 @@ jobs:
         npm ci
         
         echo "Deploying Firebase Functions..."
-        export GOOGLE_APPLICATION_CREDENTIALS=../service-account.json
-        firebase deploy --only functions --non-interactive
+        firebase deploy --only functions --token "${{ secrets.FIREBASE_TOKEN }}" --non-interactive
         
     - name: Deployment Summary
       run: |
