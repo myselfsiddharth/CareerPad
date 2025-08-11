@@ -93,9 +93,22 @@ jobs:
       
     - name: Deploy to Firebase Hosting
       run: |
-        echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > service-account.json
-        export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
-        firebase deploy --only hosting --project ${{ env.FIREBASE_PROJECT_ID }}
+        echo "Testing secret access..."
+        echo "Secret length: ${#FIREBASE_SERVICE_ACCOUNT}"
+        if [ -n "$FIREBASE_SERVICE_ACCOUNT" ]; then
+          echo "✅ Secret is available"
+          echo "$FIREBASE_SERVICE_ACCOUNT" > service-account.json
+          ls -la service-account.json
+          export GOOGLE_APPLICATION_CREDENTIALS=service-account.json
+          firebase deploy --only hosting --project ${{ env.FIREBASE_PROJECT_ID }}
+        else
+          echo "❌ Secret is empty or not accessible"
+          echo "Trying alternative approach..."
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > service-account-alt.json
+          ls -la service-account-alt.json
+          export GOOGLE_APPLICATION_CREDENTIALS=service-account-alt.json
+          firebase deploy --only hosting --project ${{ env.FIREBASE_PROJECT_ID }}
+        fi
         
     - name: Deploy Firebase Functions
       run: |
